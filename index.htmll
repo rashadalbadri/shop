@@ -1,1 +1,1497 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>نظام إدارة الطابور والفواتير والمحاسبة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <style>
+    :root {
+      --primary: #d4a638;
+      --primary-dark: #a67c1e;
+      --primary-soft: rgba(212, 166, 56, 0.14);
+      --bg: #0d0f14;
+      --surface: #161922;
+      --surface-2: #1e2330;
+      --border: rgba(255, 255, 255, 0.09);
+      --text: #f3f5f8;
+      --muted: #9aa2b2;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --info: #38bdf8;
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: radial-gradient(circle at top, #1a1f2e 0%, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 20px 16px 60px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(30, 35, 48, 0.92), rgba(22, 25, 34, 0.96));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
+      margin-bottom: 18px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    /* شاشة الدخول */
+    .login-wrapper {
+      max-width: 480px;
+      margin: 40px auto;
+    }
+
+    .brand-badge {
+      display: inline-block;
+      background: var(--primary-soft);
+      color: var(--primary);
+      border: 1px solid rgba(212, 166, 56, 0.35);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .brand-heading {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #e5e7eb;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 11px 14px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    @media (max-width: 780px) {
+      .grid-2, .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* الأزرار */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: none;
+      border-radius: 12px;
+      padding: 11px 16px;
+      font-family: inherit;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.12s, opacity 0.2s, background 0.2s;
+      text-decoration: none;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #0d0f14;
+    }
+
+    .btn-secondary {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: #062110;
+    }
+
+    .btn-warning {
+      background: var(--warning);
+      color: #1c1202;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .btn-info {
+      background: var(--info);
+      color: #061b29;
+    }
+
+    .btn-sm {
+      padding: 7px 12px;
+      font-size: 0.82rem;
+      border-radius: 10px;
+    }
+
+    .btn-call {
+      width: 100%;
+      padding: 18px 20px;
+      font-size: 1.15rem;
+      font-weight: 800;
+      border-radius: 16px;
+    }
+
+    /* الشريط العلوي والتبويبات */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .tab-btn {
+      background: var(--surface);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: #0d0f14;
+      border-color: var(--primary);
+    }
+
+    /* تنبيه نداء الممصر عند الكاشير */
+    .call-banner {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.18), rgba(212, 166, 56, 0.16));
+      border: 1px solid rgba(34, 197, 94, 0.45);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin-bottom: 18px;
+    }
+
+    .call-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      background: rgba(13, 15, 20, 0.72);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-top: 10px;
+    }
+
+    /* الحالة والشارات */
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .badge-waiting {
+      background: rgba(245, 158, 11, 0.18);
+      color: var(--warning);
+    }
+
+    .badge-calling {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--success);
+    }
+
+    .badge-progress {
+      background: rgba(56, 189, 248, 0.2);
+      color: var(--info);
+    }
+
+    .badge-done {
+      background: rgba(34, 197, 94, 0.18);
+      color: var(--success);
+    }
+
+    /* الجداول */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 650px;
+    }
+
+    th, td {
+      padding: 12px 10px;
+      text-align: right;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+
+    th {
+      color: var(--primary);
+      font-weight: 800;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* بطاقة الفاتورة والباركود */
+    .invoice-box {
+      background: #ffffff;
+      color: #111827;
+      border-radius: 16px;
+      padding: 22px;
+      max-width: 440px;
+      margin: 0 auto;
+    }
+
+    .invoice-box .inv-header {
+      text-align: center;
+      border-bottom: 2px dashed #d1d5db;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+    }
+
+    .invoice-box .inv-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+
+    .invoice-box .code-highlight {
+      background: #fef3c7;
+      border: 1px solid #f59e0b;
+      color: #78350f;
+      font-weight: 800;
+      text-align: center;
+      padding: 10px;
+      border-radius: 10px;
+      margin: 12px 0;
+      font-size: 1.05rem;
+    }
+
+    .qr-holder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px dashed #d1d5db;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media print {
+      body {
+        background: #fff !important;
+        color: #000 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-only-area {
+        display: block !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- شاشة الدخول -->
+    <div id="loginScreen" class="login-wrapper">
+      <div class="card">
+        <div class="brand-badge" id="loginShopBadge">نظام الإدارة والمحاسبة</div>
+        <h1 class="brand-heading" id="loginShopTitle">تسجيل الدخول</h1>
+        <p class="muted" style="margin-bottom: 18px;">
+          أدخل رمز الكاشير للدخول إلى لوحة الإدارة، أو أدخل الرمز الخاص بك كـ «مُمصّر» للوصول إلى شاشتك.
+        </p>
+
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="pinInput">رمز الدخول (PIN)</label>
+            <input type="password" id="pinInput" inputmode="numeric" placeholder="أدخل رمز الدخول..." required />
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">دخول إلى النظام</button>
+        </form>
+        <p class="muted" style="margin-top: 12px; font-size: 0.8rem;">
+          الرمز الافتراضي للكاشير: <strong>1234</strong> (يمكن تغييره من الإعدادات).
+        </p>
+      </div>
+    </div>
+
+    <!-- التطبيق الرئيسي -->
+    <div id="appScreen" class="hidden">
+      <div class="topbar no-print">
+        <div>
+          <div class="brand-badge" id="topShopIdentity">التمصير الملكي - التمصيرات</div>
+          <h2 id="welcomeUser" style="font-size: 1.25rem; font-weight: 800;">مرحباً</h2>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button type="button" class="btn btn-secondary btn-sm" id="soundToggleBtn">🔊 الصوت: مفعّل</button>
+          <button type="button" class="btn btn-danger btn-sm" id="logoutBtn">خروج</button>
+        </div>
+      </div>
+
+      <!-- واجهة الكاشير -->
+      <div id="cashierView" class="hidden">
+        <div class="tabs no-print">
+          <button type="button" class="tab-btn active" data-tab="queueTab">الطابور والفواتير</button>
+          <button type="button" class="tab-btn" data-tab="settlementTab">سجل تصفية الحسابات</button>
+          <button type="button" class="tab-btn" data-tab="settingsTab">الهوية والممصرين والأسعار</button>
+        </div>
+
+        <!-- تنبيهات نداء الممصرين -->
+        <div id="workerCallsBox" class="call-banner hidden no-print">
+          <div style="font-weight: 800; color: var(--success); font-size: 1rem;">
+            📣 نداء فوري من الممصرين الجاهزين لاستقبال الزبائن
+          </div>
+          <div id="workerCallsList"></div>
+        </div>
+
+        <!-- تبويب الطابور والفواتير -->
+        <div id="queueTab" class="cashier-tab">
+          <div class="grid-2">
+            <!-- إنشاء فاتورة وإضافة للطابور -->
+            <div class="card no-print">
+              <div class="card-header">
+                <span class="card-title">إضافة زبون وإنشاء فاتورة</span>
+              </div>
+              <form id="invoiceForm">
+                <div class="grid-2">
+                  <div class="form-group">
+                    <label for="customerName">اسم الزبون أو وصفه (مثال: زبون / طفل)</label>
+                    <input type="text" id="customerName" placeholder="مثال: أبو سعيد أو طفل بدون هاتف" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="customerPhone">رقم واتساب الزبون (اختياري)</label>
+                    <input type="tel" id="customerPhone" placeholder="مثال: 96890000000" />
+                  </div>
+                </div>
+
+                <div class="grid-2">
+                  <div class="form-group">
+                    <label for="serviceSelect">الخدمة / النوع</label>
+                    <select id="serviceSelect"></select>
+                  </div>
+                  <div class="form-group">
+                    <label for="invoiceAmount">المبلغ</label>
+                    <input type="number" step="0.01" min="0" id="invoiceAmount" required />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="assignedWorkerSelect">إسناد إلى مُمصّر (اختياري الآن)</label>
+                  <select id="assignedWorkerSelect"></select>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                  إصدار الفاتورة وإضافة للطابور
+                </button>
+              </form>
+            </div>
+
+            <!-- معاينة الفاتورة والباركود وإرسال واتساب -->
+            <div class="card print-only-area">
+              <div class="card-header no-print">
+                <span class="card-title">الفاتورة والباركود (للواتساب أو الورقة)</span>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <button type="button" class="btn btn-success btn-sm" id="sendWhatsappBtn">إرسال واتساب</button>
+                  <button type="button" class="btn btn-secondary btn-sm" id="printInvoiceBtn">طباعة / PDF</button>
+                </div>
+              </div>
+
+              <div id="activeInvoicePreview" class="invoice-box">
+                <div class="inv-header">
+                  <div id="invShopName" style="font-weight: 800; font-size: 1.15rem;">التمصير الملكي - التمصيرات</div>
+                  <div style="font-size: 0.82rem; color: #6b7280;">إيصال فاتورة وكود تفعيل</div>
+                </div>
+                <div class="inv-row">
+                  <span>رقم الفاتورة:</span>
+                  <strong id="invNumber">—</strong>
+                </div>
+                <div class="inv-row">
+                  <span>الزبون:</span>
+                  <strong id="invCustomer">—</strong>
+                </div>
+                <div class="inv-row">
+                  <span>الخدمة:</span>
+                  <strong id="invService">—</strong>
+                </div>
+                <div class="inv-row">
+                  <span>المبلغ:</span>
+                  <strong id="invAmount">—</strong>
+                </div>
+                <div class="inv-row">
+                  <span>المُمصّر:</span>
+                  <strong id="invWorker">بانتظار الإسناد</strong>
+                </div>
+                <div class="code-highlight">
+                  كود التفعيل: <span id="invCode">—</span>
+                </div>
+                <div class="qr-holder">
+                  <div id="invQrCode"></div>
+                  <div id="invQrCaption" style="font-size: 0.78rem; color: #4b5563; margin-top: 6px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- جدول الطابور والفواتير -->
+          <div class="card no-print">
+            <div class="card-header">
+              <span class="card-title">قائمة الطابور والفواتير</span>
+              <span class="muted" id="queueSummary">الإجمالي: 0 فاتورة</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>رقم الفاتورة</th>
+                    <th>الزبون</th>
+                    <th>الخدمة</th>
+                    <th>المبلغ</th>
+                    <th>الكود</th>
+                    <th>المُمصّر</th>
+                    <th>الحالة</th>
+                    <th>إجراءات</th>
+                  </tr>
+                </thead>
+                <tbody id="invoicesTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- تبويب سجل تصفية الحسابات -->
+        <div id="settlementTab" class="cashier-tab hidden">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <span class="card-title">سجل تصفية الحسابات لكل مُمصّر</span>
+                <div class="muted">يعرض عدد الفواتير وإجمالي المبالغ لكل مُمصّر مع التصدير والمشاركة</div>
+              </div>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-success btn-sm" id="exportExcelBtn">تصدير Excel (.csv)</button>
+                <button type="button" class="btn btn-info btn-sm" id="shareSettlementWhatsappBtn">إرسال واتساب</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="printSettlementBtn">طباعة / PDF</button>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>اسم المُمصّر</th>
+                    <th>حالة النداء الحالية</th>
+                    <th>عدد الفواتير</th>
+                    <th>إجمالي المبلغ</th>
+                    <th>تصفية / إرسال</th>
+                  </tr>
+                </thead>
+                <tbody id="settlementTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- تبويب الهوية والممصرين والأسعار -->
+        <div id="settingsTab" class="cashier-tab hidden">
+          <div class="grid-2">
+            <!-- هوية المحل والرمز والعملة -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">هوية المحل وإعدادات الكاشير</span>
+              </div>
+              <div class="form-group">
+                <label for="shopNameInput">اسم المحل / الهوية (اكتب ما تريد يدوياً)</label>
+                <input type="text" id="shopNameInput" placeholder="مثال: التمصيرات أو أي اسم تختاره" />
+              </div>
+              <div class="form-group">
+                <label for="activityLabelInput">وصف النشاط / القسم (اختياري)</label>
+                <input type="text" id="activityLabelInput" placeholder="مثال: قسم التمصير - فرع بركاء" />
+              </div>
+              <div class="grid-2">
+                <div class="form-group">
+                  <label for="currencyInput">رمز العملة</label>
+                  <input type="text" id="currencyInput" placeholder="ر.ع" />
+                </div>
+                <div class="form-group">
+                  <label for="cashierPinInput">رمز الكاشير (PIN)</label>
+                  <input type="text" id="cashierPinInput" placeholder="1234" />
+                </div>
+              </div>
+              <button type="button" class="btn btn-primary" id="saveIdentityBtn">حفظ هوية المحل والإعدادات</button>
+            </div>
+
+            <!-- إدارة الممصرين (بدون إظهار رموزهم السرية) -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">الممصرون (الرموز مخفية عن الكاشير)</span>
+              </div>
+              <p class="muted" style="margin-bottom: 12px;">
+                أضف اسم المُمصّر فقط. يمكن للمُمصّر اختيار أو تغيير رمزه الخاص بنفسه من شاشته، ولا تُعرض رموز الممصرين في شاشة الكاشير.
+              </p>
+              <div class="form-group">
+                <label for="newWorkerName">اسم المُمصّر الجديد</label>
+                <input type="text" id="newWorkerName" placeholder="مثال: عبد الرحمن أو محمد أو حسن" />
+              </div>
+              <button type="button" class="btn btn-success" id="addWorkerBtn" style="margin-bottom: 14px;">
+                إضافة مُمصّر
+              </button>
+              <div id="workersListBox"></div>
+            </div>
+          </div>
+
+          <!-- إدارة الخدمات والأسعار -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">الخدمات والأسعار</span>
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label for="newServiceName">اسم الخدمة</label>
+                <input type="text" id="newServiceName" placeholder="مثال: تمصير عماني ملكي" />
+              </div>
+              <div class="form-group">
+                <label for="newServicePrice">السعر</label>
+                <input type="number" step="0.01" min="0" id="newServicePrice" placeholder="5.00" />
+              </div>
+            </div>
+            <button type="button" class="btn btn-primary" id="addServiceBtn" style="margin-bottom: 14px;">
+              إضافة خدمة
+            </button>
+            <div id="servicesListBox"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- واجهة المُمصّر -->
+      <div id="workerView" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <span class="card-title" id="workerTitleName">شاشة المُمصّر</span>
+              <div class="muted" id="workerStatusText">الحالة: غير منادٍ حالياً</div>
+            </div>
+            <span id="workerCallBadge" class="badge badge-waiting">بانتظار النداء</span>
+          </div>
+
+          <button type="button" id="callCustomerBtn" class="btn btn-success btn-call">
+            📣 أنا فاضي — نادِ زبوناً للكاشير
+          </button>
+
+          <p class="muted" style="margin-top: 10px; text-align: center;">
+            عند الضغط على الزر يظهر تنبيه فوري عند الكاشير بأنك جاهز لاستقبال الزبون التالي.
+          </p>
+        </div>
+
+        <!-- اختيار أو تغيير رمز المُمصّر بنفسه -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">تعيين / تغيير رمزي الخاص (PIN)</span>
+          </div>
+          <p class="muted" style="margin-bottom: 10px;">
+            اختر الرمز السري الذي يناسبك للدخول إلى شاشتك؛ هذا الرمز خاص بك ولا يظهر للكاشير.
+          </p>
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="workerSelfPinInput">رمزي السري الجديد</label>
+              <input type="text" id="workerSelfPinInput" placeholder="مثال: 5566" />
+            </div>
+            <div class="form-group" style="display: flex; align-items: flex-end;">
+              <button type="button" class="btn btn-primary" id="saveWorkerPinBtn" style="width: 100%;">
+                حفظ رمزي الخاص
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- الفواتير المسندة للمُمصّر -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">فواتيري المسندة</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>رقم الفاتورة</th>
+                  <th>الزبون</th>
+                  <th>الخدمة</th>
+                  <th>المبلغ</th>
+                  <th>كود التفعيل</th>
+                  <th>الحالة</th>
+                  <th>إتمام</th>
+                </tr>
+              </thead>
+              <tbody id="workerInvoicesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'royal_shop_system_v2';
+
+    const defaultState = {
+      shopName: 'التمصير الملكي',
+      activityLabel: 'قسم التمصيرات',
+      currency: 'ر.ع',
+      cashierPin: '1234',
+      soundEnabled: true,
+      workers: [
+        { id: 'w1', name: 'عبد الرحمن', pin: '2001', calling: false, calledAt: null },
+        { id: 'w2', name: 'محمد', pin: '2002', calling: false, calledAt: null },
+        { id: 'w3', name: 'حسن', pin: '2003', calling: false, calledAt: null }
+      ],
+      services: [
+        { id: 's1', name: 'تمصير عماني', price: 3.0 },
+        { id: 's2', name: 'تمصير ملكي / مناسبات', price: 5.0 }
+      ],
+      invoices: []
+    };
+
+    let state = loadState();
+    let currentSession = null; // { role: 'cashier' | 'worker', workerId?: string }
+    let selectedInvoiceId = null;
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return structuredClone(defaultState);
+        const parsed = JSON.parse(raw);
+        return {
+          ...structuredClone(defaultState),
+          ...parsed,
+          workers: Array.isArray(parsed.workers) && parsed.workers.length ? parsed.workers : structuredClone(defaultState.workers),
+          services: Array.isArray(parsed.services) && parsed.services.length ? parsed.services : structuredClone(defaultState.services),
+          invoices: Array.isArray(parsed.invoices) ? parsed.invoices : []
+        };
+      } catch {
+        return structuredClone(defaultState);
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function playChime() {
+      if (!state.soundEnabled) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.setValueAtTime(1174.66, ctx.currentTime + 0.14);
+        gain.gain.setValueAtTime(0.18, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.46);
+      } catch {}
+    }
+
+    function generateInvoiceNumber() {
+      const seq = String(state.invoices.length + 1).padStart(4, '0');
+      return 'INV-' + seq;
+    }
+
+    function generateActivationCode() {
+      return String(Math.floor(1000 + Math.random() * 9000));
+    }
+
+    function updateBrandingHeaders() {
+      const fullIdentity = state.activityLabel
+        ? `${state.shopName} — ${state.activityLabel}`
+        : state.shopName;
+
+      document.getElementById('loginShopBadge').textContent = fullIdentity;
+      document.getElementById('loginShopTitle').textContent = state.shopName;
+      document.getElementById('topShopIdentity').textContent = fullIdentity;
+      document.getElementById('invShopName').textContent = fullIdentity;
+      document.title = fullIdentity;
+    }
+
+    // تسجيل الدخول
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const pin = document.getElementById('pinInput').value.trim();
+
+      if (pin === String(state.cashierPin)) {
+        currentSession = { role: 'cashier' };
+        openApp();
+        return;
+      }
+
+      const matchedWorker = state.workers.find((w) => String(w.pin) === pin);
+      if (matchedWorker) {
+        currentSession = { role: 'worker', workerId: matchedWorker.id };
+        openApp();
+        return;
+      }
+
+      alert('رمز الدخول غير صحيح.');
+    });
+
+    function openApp() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('appScreen').classList.remove('hidden');
+      document.getElementById('pinInput').value = '';
+      updateBrandingHeaders();
+      renderSoundButton();
+
+      if (currentSession.role === 'cashier') {
+        document.getElementById('welcomeUser').textContent = 'مرحباً بالكاشير (إدارة الطابور والفواتير والتصفية)';
+        document.getElementById('cashierView').classList.remove('hidden');
+        document.getElementById('workerView').classList.add('hidden');
+        renderCashierAll();
+      } else {
+        const worker = state.workers.find((w) => w.id === currentSession.workerId);
+        document.getElementById('welcomeUser').textContent = `شاشة المُمصّر: ${worker.name}`;
+        document.getElementById('cashierView').classList.add('hidden');
+        document.getElementById('workerView').classList.remove('hidden');
+        renderWorkerView();
+      }
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      currentSession = null;
+      document.getElementById('appScreen').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+    });
+
+    function renderSoundButton() {
+      const btn = document.getElementById('soundToggleBtn');
+      btn.textContent = state.soundEnabled ? '🔊 الصوت: مفعّل' : '🔇 الصوت: مكتوم';
+    }
+
+    document.getElementById('soundToggleBtn').addEventListener('click', () => {
+      state.soundEnabled = !state.soundEnabled;
+      saveState();
+      renderSoundButton();
+    });
+
+    // تبويبات الكاشير
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        const target = btn.dataset.tab;
+        document.querySelectorAll('.cashier-tab').forEach((tab) => {
+          tab.classList.toggle('hidden', tab.id !== target);
+        });
+        if (target === 'settlementTab') renderSettlementTable();
+        if (target === 'settingsTab') renderSettingsTab();
+      });
+    });
+
+    function renderCashierAll() {
+      populateServiceAndWorkerSelects();
+      renderWorkerCallsBanner();
+      renderInvoicesTable();
+      renderInvoicePreview();
+      renderSettlementTable();
+      renderSettingsTab();
+    }
+
+    function populateServiceAndWorkerSelects() {
+      const serviceSelect = document.getElementById('serviceSelect');
+      serviceSelect.innerHTML = state.services
+        .map((s) => `<option value="${s.id}" data-price="${s.price}">${s.name} (${Number(s.price).toFixed(2)} ${state.currency})</option>`)
+        .join('');
+
+      const firstService = state.services[0];
+      if (firstService && !document.getElementById('invoiceAmount').dataset.manual) {
+        document.getElementById('invoiceAmount').value = Number(firstService.price).toFixed(2);
+      }
+
+      const workerSelect = document.getElementById('assignedWorkerSelect');
+      workerSelect.innerHTML =
+        '<option value="">— بدون إسناد الآن (في الانتظار) —</option>' +
+        state.workers.map((w) => `<option value="${w.id}">${w.name}${w.calling ? ' (ينادي الآن)' : ''}</option>`).join('');
+    }
+
+    document.getElementById('serviceSelect').addEventListener('change', (e) => {
+      const selected = state.services.find((s) => s.id === e.target.value);
+      if (selected) {
+        document.getElementById('invoiceAmount').value = Number(selected.price).toFixed(2);
+      }
+    });
+
+    // نداء الممصر للكاشير
+    function renderWorkerCallsBanner() {
+      const callingWorkers = state.workers.filter((w) => w.calling);
+      const box = document.getElementById('workerCallsBox');
+      const list = document.getElementById('workerCallsList');
+
+      if (!callingWorkers.length) {
+        box.classList.add('hidden');
+        list.innerHTML = '';
+        return;
+      }
+
+      box.classList.remove('hidden');
+      list.innerHTML = callingWorkers
+        .map(
+          (w) => `
+          <div class="call-item">
+            <div>
+              <strong>${w.name}</strong> فاضي وينادي لاستقبال زبون
+              <div class="muted" style="font-size: 0.8rem;">وقت النداء: ${w.calledAt || 'الآن'}</div>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="btn btn-primary btn-sm" onclick="assignNextWaitingCustomer('${w.id}')">
+                إسناد أول زبون منتظر
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="dismissWorkerCall('${w.id}')">
+                إخفاء النداء
+              </button>
+            </div>
+          </div>
+        `
+        )
+        .join('');
+    }
+
+    window.assignNextWaitingCustomer = function (workerId) {
+      const waitingInv = state.invoices.find((inv) => inv.status === 'waiting');
+      if (!waitingInv) {
+        alert('لا يوجد زبون في قائمة الانتظار حالياً.');
+        return;
+      }
+      waitingInv.workerId = workerId;
+      waitingInv.status = 'in_progress';
+      const worker = state.workers.find((w) => w.id === workerId);
+      if (worker) worker.calling = false;
+      selectedInvoiceId = waitingInv.id;
+      saveState();
+      renderCashierAll();
+    };
+
+    window.dismissWorkerCall = function (workerId) {
+      const worker = state.workers.find((w) => w.id === workerId);
+      if (worker) worker.calling = false;
+      saveState();
+      renderCashierAll();
+    };
+
+    // إنشاء فاتورة
+    document.getElementById('invoiceForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const customerName = document.getElementById('customerName').value.trim();
+      const customerPhone = document.getElementById('customerPhone').value.trim();
+      const serviceId = document.getElementById('serviceSelect').value;
+      const service = state.services.find((s) => s.id === serviceId) || { name: 'خدمة عامة' };
+      const amount = parseFloat(document.getElementById('invoiceAmount').value) || 0;
+      const workerId = document.getElementById('assignedWorkerSelect').value || null;
+
+      const newInv = {
+        id: 'inv_' + Date.now(),
+        number: generateInvoiceNumber(),
+        customerName,
+        customerPhone,
+        serviceName: service.name,
+        amount,
+        code: generateActivationCode(),
+        workerId,
+        status: workerId ? 'in_progress' : 'waiting',
+        createdAt: new Date().toLocaleString('ar-OM')
+      };
+
+      if (workerId) {
+        const w = state.workers.find((item) => item.id === workerId);
+        if (w) w.calling = false;
+      }
+
+      state.invoices.unshift(newInv);
+      selectedInvoiceId = newInv.id;
+      saveState();
+
+      document.getElementById('customerName').value = '';
+      document.getElementById('customerPhone').value = '';
+      renderCashierAll();
+    });
+
+    function getWorkerName(workerId) {
+      const w = state.workers.find((item) => item.id === workerId);
+      return w ? w.name : 'غير مسند';
+    }
+
+    function renderStatusBadge(status) {
+      if (status === 'waiting') return '<span class="badge badge-waiting">بالانتظار</span>';
+      if (status === 'in_progress') return '<span class="badge badge-progress">قيد التنفيذ</span>';
+      return '<span class="badge badge-done">مكتملة</span>';
+    }
+
+    function renderInvoicesTable() {
+      const tbody = document.getElementById('invoicesTableBody');
+      const totalAmount = state.invoices.reduce((sum, i) => sum + Number(i.amount || 0), 0);
+      document.getElementById('queueSummary').textContent =
+        `الإجمالي: ${state.invoices.length} فاتورة | ${totalAmount.toFixed(2)} ${state.currency}`;
+
+      if (!state.invoices.length) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color: var(--muted);">لا توجد فواتير مسجلة بعد.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = state.invoices
+        .map((inv) => {
+          const workerOptions =
+            '<option value="">اختر مُمصّر</option>' +
+            state.workers
+              .map((w) => `<option value="${w.id}" ${inv.workerId === w.id ? 'selected' : ''}>${w.name}</option>`)
+              .join('');
+
+          return `
+            <tr>
+              <td><strong>${inv.number}</strong></td>
+              <td>${escapeHtml(inv.customerName)}</td>
+              <td>${escapeHtml(inv.serviceName)}</td>
+              <td>${Number(inv.amount).toFixed(2)} ${state.currency}</td>
+              <td><strong>${inv.code}</strong></td>
+              <td>
+                <select onchange="assignWorkerToInvoice('${inv.id}', this.value)" style="min-width: 120px; padding: 6px 8px;">
+                  ${workerOptions}
+                </select>
+              </td>
+              <td>${renderStatusBadge(inv.status)}</td>
+              <td>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="selectInvoice('${inv.id}')">عرض</button>
+                  ${
+                    inv.status !== 'done'
+                      ? `<button type="button" class="btn btn-success btn-sm" onclick="markInvoiceDone('${inv.id}')">إتمام</button>`
+                      : ''
+                  }
+                  <button type="button" class="btn btn-danger btn-sm" onclick="deleteInvoice('${inv.id}')">حذف</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        })
+        .join('');
+    }
+
+    window.assignWorkerToInvoice = function (invoiceId, workerId) {
+      const inv = state.invoices.find((i) => i.id === invoiceId);
+      if (!inv) return;
+      inv.workerId = workerId || null;
+      if (workerId && inv.status === 'waiting') {
+        inv.status = 'in_progress';
+      }
+      if (workerId) {
+        const w = state.workers.find((item) => item.id === workerId);
+        if (w) w.calling = false;
+      }
+      saveState();
+      renderCashierAll();
+    };
+
+    window.selectInvoice = function (invoiceId) {
+      selectedInvoiceId = invoiceId;
+      renderInvoicePreview();
+    };
+
+    window.markInvoiceDone = function (invoiceId) {
+      const inv = state.invoices.find((i) => i.id === invoiceId);
+      if (!inv) return;
+      inv.status = 'done';
+      saveState();
+      renderCashierAll();
+    };
+
+    window.deleteInvoice = function (invoiceId) {
+      state.invoices = state.invoices.filter((i) => i.id !== invoiceId);
+      if (selectedInvoiceId === invoiceId) {
+        selectedInvoiceId = state.invoices[0]?.id || null;
+      }
+      saveState();
+      renderCashierAll();
+    };
+
+    function getCurrentPreviewInvoice() {
+      if (selectedInvoiceId) {
+        const found = state.invoices.find((i) => i.id === selectedInvoiceId);
+        if (found) return found;
+      }
+      return state.invoices[0] || null;
+    }
+
+    function renderInvoicePreview() {
+      const inv = getCurrentPreviewInvoice();
+      const qrBox = document.getElementById('invQrCode');
+      qrBox.innerHTML = '';
+
+      if (!inv) {
+        document.getElementById('invNumber').textContent = '—';
+        document.getElementById('invCustomer').textContent = '—';
+        document.getElementById('invService').textContent = '—';
+        document.getElementById('invAmount').textContent = '—';
+        document.getElementById('invWorker').textContent = '—';
+        document.getElementById('invCode').textContent = '—';
+        document.getElementById('invQrCaption').textContent = '';
+        return;
+      }
+
+      document.getElementById('invNumber').textContent = inv.number;
+      document.getElementById('invCustomer').textContent = inv.customerName;
+      document.getElementById('invService').textContent = inv.serviceName;
+      document.getElementById('invAmount').textContent = `${Number(inv.amount).toFixed(2)} ${state.currency}`;
+      document.getElementById('invWorker').textContent = getWorkerName(inv.workerId);
+      document.getElementById('invCode').textContent = inv.code;
+
+      const qrPayload = `INV|${inv.number}|${inv.code}|${inv.amount}`;
+      document.getElementById('invQrCaption').textContent = `باركود الفاتورة: ${qrPayload}`;
+
+      if (window.QRCode) {
+        new QRCode(qrBox, {
+          text: qrPayload,
+          width: 136,
+          height: 136
+        });
+      }
+    }
+
+    function buildInvoiceWhatsappText(inv) {
+      const fullIdentity = state.activityLabel
+        ? `${state.shopName} - ${state.activityLabel}`
+        : state.shopName;
+      const qrPayload = `INV|${inv.number}|${inv.code}|${Number(inv.amount).toFixed(2)}`;
+      return [
+        `*${fullIdentity}*`,
+        `رقم الفاتورة: *${inv.number}*`,
+        `الزبون: ${inv.customerName}`,
+        `الخدمة: ${inv.serviceName}`,
+        `المبلغ: *${Number(inv.amount).toFixed(2)} ${state.currency}*`,
+        `كود التفعيل: *${inv.code}*`,
+        `الباركود / رمز المسح: \`${qrPayload}\``
+      ].join('\n');
+    }
+
+    document.getElementById('sendWhatsappBtn').addEventListener('click', () => {
+      const inv = getCurrentPreviewInvoice();
+      if (!inv) {
+        alert('لا توجد فاتورة لإرسالها.');
+        return;
+      }
+      const text = encodeURIComponent(buildInvoiceWhatsappText(inv));
+      const cleanPhone = (inv.customerPhone || '').replace(/[^\d]/g, '');
+      const url = cleanPhone
+        ? `https://wa.me/${cleanPhone}?text=${text}`
+        : `https://wa.me/?text=${text}`;
+      window.open(url, '_blank');
+    });
+
+    document.getElementById('printInvoiceBtn').addEventListener('click', () => {
+      window.print();
+    });
+
+    // سجل تصفية الحسابات
+    function getSettlementRows() {
+      return state.workers.map((w) => {
+        const workerInvoices = state.invoices.filter((inv) => inv.workerId === w.id);
+        const total = workerInvoices.reduce((sum, inv) => sum + Number(inv.amount || 0), 0);
+        return {
+          workerId: w.id,
+          name: w.name,
+          calling: Boolean(w.calling),
+          count: workerInvoices.length,
+          total
+        };
+      });
+    }
+
+    function renderSettlementTable() {
+      const tbody = document.getElementById('settlementTableBody');
+      const rows = getSettlementRows();
+
+      tbody.innerHTML = rows
+        .map(
+          (r) => `
+          <tr>
+            <td><strong>${escapeHtml(r.name)}</strong></td>
+            <td>${r.calling ? '<span class="badge badge-calling">فاضي / ينادي</span>' : '<span class="muted">عادي</span>'}</td>
+            <td>${r.count} فاتورة</td>
+            <td><strong>${r.total.toFixed(2)} ${state.currency}</strong></td>
+            <td>
+              <button type="button" class="btn btn-success btn-sm" onclick="sendSingleWorkerSettlement('${r.workerId}')">
+                إرسال حسابه واتساب
+              </button>
+            </td>
+          </tr>
+        `
+        )
+        .join('');
+    }
+
+    function buildSettlementSummaryText(filterWorkerId = null) {
+      const fullIdentity = state.activityLabel
+        ? `${state.shopName} - ${state.activityLabel}`
+        : state.shopName;
+      const rows = getSettlementRows().filter((r) => !filterWorkerId || r.workerId === filterWorkerId);
+      const lines = [`*تصفية الحسابات — ${fullIdentity}*`, ''];
+      rows.forEach((r) => {
+        lines.push(`• *${r.name}*: ${r.count} فاتورة | الإجمالي: *${r.total.toFixed(2)} ${state.currency}*`);
+      });
+      return lines.join('\n');
+    }
+
+    window.sendSingleWorkerSettlement = function (workerId) {
+      const text = encodeURIComponent(buildSettlementSummaryText(workerId));
+      window.open(`https://wa.me/?text=${text}`, '_blank');
+    };
+
+    document.getElementById('shareSettlementWhatsappBtn').addEventListener('click', () => {
+      const text = encodeURIComponent(buildSettlementSummaryText());
+      window.open(`https://wa.me/?text=${text}`, '_blank');
+    });
+
+    document.getElementById('exportExcelBtn').addEventListener('click', () => {
+      const rows = getSettlementRows();
+      const csvLines = [
+        ['اسم الممصر', 'عدد الفواتير', `إجمالي المبلغ (${state.currency})`].join(',')
+      ];
+      rows.forEach((r) => {
+        csvLines.push([`"${r.name.replace(/"/g, '""')}"`, r.count, r.total.toFixed(2)].join(','));
+      });
+      const blob = new Blob(['\uFEFF' + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'tasfiyat-al-hisabat.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('printSettlementBtn').addEventListener('click', () => {
+      window.print();
+    });
+
+    // تبويب الإعدادات (الهوية والممصرين والأسعار)
+    function renderSettingsTab() {
+      document.getElementById('shopNameInput').value = state.shopName;
+      document.getElementById('activityLabelInput').value = state.activityLabel;
+      document.getElementById('currencyInput').value = state.currency;
+      document.getElementById('cashierPinInput').value = state.cashierPin;
+
+      // عرض أسماء الممصرين فقط بدون رموزهم السرية
+      const workersBox = document.getElementById('workersListBox');
+      workersBox.innerHTML = state.workers
+        .map(
+          (w) => `
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px; border:1px solid var(--border); border-radius:10px; margin-bottom:8px;">
+            <div>
+              <strong>${escapeHtml(w.name)}</strong>
+              <span class="muted" style="font-size:0.8rem;"> (الرمز مخفي عن الكاشير)</span>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeWorker('${w.id}')">حذف</button>
+          </div>
+        `
+        )
+        .join('');
+
+      const servicesBox = document.getElementById('servicesListBox');
+      servicesBox.innerHTML = state.services
+        .map(
+          (s) => `
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px; border:1px solid var(--border); border-radius:10px; margin-bottom:8px;">
+            <div>
+              <strong>${escapeHtml(s.name)}</strong> — <span>${Number(s.price).toFixed(2)} ${state.currency}</span>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeService('${s.id}')">حذف</button>
+          </div>
+        `
+        )
+        .join('');
+    }
+
+    document.getElementById('saveIdentityBtn').addEventListener('click', () => {
+      const shopName = document.getElementById('shopNameInput').value.trim();
+      const activityLabel = document.getElementById('activityLabelInput').value.trim();
+      const currency = document.getElementById('currencyInput').value.trim() || 'ر.ع';
+      const cashierPin = document.getElementById('cashierPinInput').value.trim();
+
+      if (!shopName) {
+        alert('يرجى كتابة اسم المحل.');
+        return;
+      }
+      if (!cashierPin) {
+        alert('يرجى إدخال رمز الكاشير.');
+        return;
+      }
+
+      state.shopName = shopName;
+      state.activityLabel = activityLabel;
+      state.currency = currency;
+      state.cashierPin = cashierPin;
+      saveState();
+      updateBrandingHeaders();
+      renderCashierAll();
+      alert('تم حفظ هوية المحل والإعدادات.');
+    });
+
+    document.getElementById('addWorkerBtn').addEventListener('click', () => {
+      const nameInput = document.getElementById('newWorkerName');
+      const name = nameInput.value.trim();
+      if (!name) {
+        alert('اكتب اسم المُمصّر أولاً.');
+        return;
+      }
+      const generatedPin = String(Math.floor(3000 + Math.random() * 6999));
+      state.workers.push({
+        id: 'w_' + Date.now(),
+        name,
+        pin: generatedPin,
+        calling: false,
+        calledAt: null
+      });
+      nameInput.value = '';
+      saveState();
+      renderCashierAll();
+    });
+
+    window.removeWorker = function (workerId) {
+      if (state.workers.length <= 1) {
+        alert('يجب وجود مُمصّر واحد على الأقل.');
+        return;
+      }
+      state.workers = state.workers.filter((w) => w.id !== workerId);
+      saveState();
+      renderCashierAll();
+    };
+
+    document.getElementById('addServiceBtn').addEventListener('click', () => {
+      const nameEl = document.getElementById('newServiceName');
+      const priceEl = document.getElementById('newServicePrice');
+      const name = nameEl.value.trim();
+      const price = parseFloat(priceEl.value);
+      if (!name || isNaN(price) || price < 0) {
+        alert('أدخل اسم الخدمة وسعراً صحيحاً.');
+        return;
+      }
+      state.services.push({
+        id: 's_' + Date.now(),
+        name,
+        price
+      });
+      nameEl.value = '';
+      priceEl.value = '';
+      saveState();
+      renderCashierAll();
+    });
+
+    window.removeService = function (serviceId) {
+      if (state.services.length <= 1) {
+        alert('يجب وجود خدمة واحدة على الأقل.');
+        return;
+      }
+      state.services = state.services.filter((s) => s.id !== serviceId);
+      saveState();
+      renderCashierAll();
+    };
+
+    // شاشة المُمصّر
+    function renderWorkerView() {
+      const worker = state.workers.find((w) => w.id === currentSession.workerId);
+      if (!worker) return;
+
+      document.getElementById('workerTitleName').textContent = `شاشة المُمصّر — ${worker.name}`;
+      document.getElementById('workerSelfPinInput').value = worker.pin || '';
+
+      const callBtn = document.getElementById('callCustomerBtn');
+      const statusText = document.getElementById('workerStatusText');
+      const badge = document.getElementById('workerCallBadge');
+
+      if (worker.calling) {
+        statusText.textContent = `الحالة: فاضي وتنادي للكاشير منذ (${worker.calledAt || 'الآن'})`;
+        badge.className = 'badge badge-calling';
+        badge.textContent = 'النداء مرسل للكاشير';
+        callBtn.className = 'btn btn-warning btn-call';
+        callBtn.textContent = '✓ تم إرسال النداء — اضغط لإلغاء النداء';
+      } else {
+        statusText.textContent = 'الحالة: غير منادٍ حالياً';
+        badge.className = 'badge badge-waiting';
+        badge.textContent = 'بانتظار النداء';
+        callBtn.className = 'btn btn-success btn-call';
+        callBtn.textContent = '📣 أنا فاضي — نادِ زبوناً للكاشير';
+      }
+
+      const myInvoices = state.invoices.filter((inv) => inv.workerId === worker.id);
+      const tbody = document.getElementById('workerInvoicesBody');
+      if (!myInvoices.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color: var(--muted);">لا توجد فواتير مسندة لك حالياً.</td></tr>';
+      } else {
+        tbody.innerHTML = myInvoices
+          .map(
+            (inv) => `
+            <tr>
+              <td><strong>${inv.number}</strong></td>
+              <td>${escapeHtml(inv.customerName)}</td>
+              <td>${escapeHtml(inv.serviceName)}</td>
+              <td>${Number(inv.amount).toFixed(2)} ${state.currency}</td>
+              <td><strong>${inv.code}</strong></td>
+              <td>${renderStatusBadge(inv.status)}</td>
+              <td>
+                ${
+                  inv.status !== 'done'
+                    ? `<button type="button" class="btn btn-success btn-sm" onclick="workerCompleteInvoice('${inv.id}')">تم الإنجاز</button>`
+                    : 'مكتمل'
+                }
+              </td>
+            </tr>
+          `
+          )
+          .join('');
+      }
+    }
+
+    document.getElementById('callCustomerBtn').addEventListener('click', () => {
+      const worker = state.workers.find((w) => w.id === currentSession.workerId);
+      if (!worker) return;
+      worker.calling = !worker.calling;
+      worker.calledAt = worker.calling
+        ? new Date().toLocaleTimeString('ar-OM', { hour: '2-digit', minute: '2-digit' })
+        : null;
+      if (worker.calling) playChime();
+      saveState();
+      renderWorkerView();
+    });
+
+    document.getElementById('saveWorkerPinBtn').addEventListener('click', () => {
+      const worker = state.workers.find((w) => w.id === currentSession.workerId);
+      if (!worker) return;
+      const newPin = document.getElementById('workerSelfPinInput').value.trim();
+      if (!newPin || newPin.length < 3) {
+        alert('اختر رمزاً مكوناً من 3 أرقام أو أحرف على الأقل.');
+        return;
+      }
+      const duplicate = state.workers.some((w) => w.id !== worker.id && String(w.pin) === newPin);
+      if (duplicate || newPin === String(state.cashierPin)) {
+        alert('هذا الرمز مستخدم بالفعل، اختر رمزاً آخر.');
+        return;
+      }
+      worker.pin = newPin;
+      saveState();
+      alert('تم حفظ رمزك السري بنجاح.');
+    });
+
+    window.workerCompleteInvoice = function (invoiceId) {
+      const inv = state.invoices.find((i) => i.id === invoiceId);
+      if (!inv) return;
+      inv.status = 'done';
+      saveState();
+      renderWorkerView();
+    };
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    updateBrandingHeaders();
+  </script>
+</body>
+</html>
 
