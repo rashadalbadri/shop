@@ -1,1 +1,1415 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>نظام التمصير والفواتير والمحاسبة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    :root {
+      --primary: #d4a638;
+      --primary-dark: #a67c1e;
+      --primary-soft: rgba(212, 166, 56, 0.14);
+      --bg: #0d0f14;
+      --surface: #161922;
+      --surface-2: #1e2330;
+      --border: rgba(255, 255, 255, 0.09);
+      --text: #f3f5f8;
+      --muted: #9aa2b2;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --info: #38bdf8;
+      --radius: 14px;
+    }
 
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Cairo', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.55;
+      padding-bottom: 40px;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.28);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-badge {
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      background: var(--primary-soft);
+      border: 1.5px solid var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .brand-badge img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .brand-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .brand-sub {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .session-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .tab-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .tab-btn:hover {
+      border-color: var(--primary);
+      color: var(--text);
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: #111318;
+      border-color: var(--primary);
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--primary);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 11px 13px;
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+      transition: 0.18s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+    }
+
+    .btn {
+      border: none;
+      border-radius: 10px;
+      padding: 11px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: 0.18s ease;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #111318;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--primary);
+    }
+
+    .btn-success {
+      background: rgba(34, 197, 94, 0.16);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.35);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.35);
+    }
+
+    .btn-sm {
+      padding: 7px 11px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .stat-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .stat-val {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .stat-val.gold {
+      color: var(--primary);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 700;
+      background: var(--surface-2);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .badge-wait {
+      background: rgba(245, 158, 11, 0.16);
+      color: #fbbf24;
+    }
+
+    .badge-done {
+      background: rgba(34, 197, 94, 0.16);
+      color: #4ade80;
+    }
+
+    .ticket-box {
+      background: #ffffff;
+      color: #111318;
+      border-radius: 14px;
+      padding: 18px;
+      max-width: 340px;
+      margin: 0 auto;
+      text-align: center;
+      border: 2px dashed #111318;
+    }
+
+    .ticket-qr {
+      display: flex;
+      justify-content: center;
+      margin: 12px 0;
+    }
+
+    .pin-screen {
+      max-width: 440px;
+      margin: 30px auto;
+    }
+
+    .role-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .color-swatches {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .swatch {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      cursor: pointer;
+    }
+
+    .alert-msg {
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-top: 10px;
+    }
+
+    .alert-err {
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.35);
+    }
+
+    .alert-ok {
+      background: rgba(34, 197, 94, 0.15);
+      color: #86efac;
+      border: 1px solid rgba(34, 197, 94, 0.35);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printArea, #printArea * {
+        visibility: visible;
+      }
+      #printArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="authScreen" class="card pin-screen">
+      <div style="text-align:center; margin-bottom:16px;">
+        <div id="authLogo" class="brand-badge" style="margin:0 auto 10px;">👑</div>
+        <h2 id="authShopName" style="color:var(--primary); font-size:22px;">التمصير الملكي</h2>
+        <p id="authShopTagline" class="brand-sub">إدارة الدور والفواتير وحسابات المُمصّرين</p>
+      </div>
+
+      <div class="role-switch">
+        <button type="button" id="roleCashierBtn" class="btn btn-primary" onclick="setLoginRole('cashier')">الكاشير / الإدارة</button>
+        <button type="button" id="roleWorkerBtn" class="btn btn-secondary" onclick="setLoginRole('worker')">المُمصّر / المنفّذ</button>
+      </div>
+
+      <div id="workerSelectGroup" class="form-group hidden">
+        <label id="workerSelectLabel">اختر اسم المُمصّر</label>
+        <select id="loginWorkerSelect"></select>
+      </div>
+
+      <div class="form-group">
+        <label>الرمز السري (PIN)</label>
+        <input type="password" id="loginPinInput" inputmode="numeric" placeholder="أدخل الرمز السري..." />
+      </div>
+
+      <button type="button" class="btn btn-primary" style="width:100%;" onclick="handleLogin()">دخول إلى النظام</button>
+      <div id="authError" class="alert-msg alert-err hidden"></div>
+    </div>
+
+    <div id="appScreen" class="hidden">
+      <div class="header">
+        <div class="brand">
+          <div id="headerLogo" class="brand-badge">👑</div>
+          <div>
+            <div id="headerTitle" class="brand-title">التمصير الملكي</div>
+            <div id="headerTagline" class="brand-sub">نظام الفواتير والباركود وتصفية الحسابات</div>
+          </div>
+        </div>
+        <div class="header-actions">
+          <div class="session-pill">
+            <span class="dot"></span>
+            <span id="currentUserLabel">المستخدم</span>
+            <span id="syncStatusText" style="color:var(--muted); font-size:11px;">(محلي)</span>
+          </div>
+          <button type="button" class="btn btn-danger btn-sm" onclick="logout()">خروج</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button type="button" id="tabCashier" class="tab-btn active" onclick="switchTab('cashier')">🧾 الكاشير والفواتير</button>
+        <button type="button" id="tabWorker" class="tab-btn" onclick="switchTab('worker')">⚡ شاشة المُمصّر</button>
+        <button type="button" id="tabAccounting" class="tab-btn" onclick="switchTab('accounting')">📊 المحاسبة والتصفية</button>
+        <button type="button" id="tabSettings" class="tab-btn" onclick="switchTab('settings')">⚙️ إعدادات المحل</button>
+      </div>
+
+      <section id="viewCashier" class="grid-2">
+        <div class="card">
+          <div class="card-title">إصدار فاتورة جديدة</div>
+          <div class="form-group">
+            <label>رقم الفاتورة / الدور (يُملأ تلقائياً أو اكتبه يدوياً)</label>
+            <input type="number" id="invNumberInput" />
+          </div>
+          <div class="form-group">
+            <label>اسم الزبون</label>
+            <input type="text" id="custNameInput" placeholder="مثال: أبو محمد" />
+          </div>
+          <div class="form-group">
+            <label>رقم الهاتف (للنداء عبر الواتساب)</label>
+            <input type="tel" id="custPhoneInput" placeholder="مثال: 9689xxxxxxx" />
+          </div>
+          <div class="grid-2" style="gap:10px;">
+            <div class="form-group">
+              <label>المبلغ الإجمالي (ر.ع)</label>
+              <input type="number" step="0.1" id="invPriceInput" />
+            </div>
+            <div class="form-group">
+              <label>حصة المنفّذ (ر.ع)</label>
+              <input type="number" step="0.1" id="invWorkerShareInput" />
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary" style="width:100%;" onclick="createInvoice()">إصدار الفاتورة وتوليد الباركود</button>
+          <div id="cashierMsg" class="alert-msg hidden"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>التذكرة والباركود</span>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ طباعة</button>
+          </div>
+          <div id="printArea">
+            <div id="ticketPreview" class="ticket-box">
+              <div style="color:#666; font-size:13px;">لا توجد فاتورة محددة بعد</div>
+            </div>
+          </div>
+          <div id="ticketActions" class="hidden" style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-success" style="flex:1;" onclick="sendWhatsApp('confirm')">📲 إرسال الفاتورة واتساب</button>
+            <button type="button" class="btn btn-primary" style="flex:1;" onclick="openCallModal()">📣 نداء للزبون</button>
+          </div>
+
+          <div id="callBox" class="hidden" style="margin-top:12px; background:var(--surface-2); padding:12px; border-radius:10px;">
+            <label>اختر المنفّذ الجاهز لنداء الزبون:</label>
+            <div style="display:flex; gap:8px;">
+              <select id="callWorkerSelect"></select>
+              <button type="button" class="btn btn-primary btn-sm" onclick="sendWhatsApp('call')">إرسال النداء</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="viewWorker">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">تثبيت فاتورة (باركود أو كود تفعيل)</div>
+            <div class="form-group">
+              <label>المُمصّر / المنفّذ الحالي</label>
+              <select id="activeWorkerSelect" onchange="renderWorkerView()"></select>
+            </div>
+
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+              <button type="button" class="btn btn-secondary" style="flex:1;" onclick="startScanner()">📷 تشغيل الكاميرا للمسح</button>
+              <button type="button" class="btn btn-danger btn-sm" onclick="stopScanner()">إيقاف الكاميرا</button>
+            </div>
+            <div id="qrReader" style="width:100%; margin-bottom:12px; border-radius:10px; overflow:hidden;"></div>
+
+            <div class="grid-2" style="gap:10px;">
+              <div class="form-group">
+                <label>رقم الفاتورة</label>
+                <input type="number" id="claimInvNum" placeholder="مثال: 1" />
+              </div>
+              <div class="form-group">
+                <label>كود التفعيل السري (4 أرقام)</label>
+                <input type="text" id="claimPinCode" inputmode="numeric" placeholder="مثال: 4829" />
+              </div>
+            </div>
+            <button type="button" class="btn btn-primary" style="width:100%;" onclick="claimInvoiceManual()">تأكيد وقبول الفاتورة باسمي</button>
+            <div id="workerMsg" class="alert-msg hidden"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">ملفّي اليوم والفواتير المقبولة</div>
+            <div class="grid-3" style="margin-bottom:14px;">
+              <div class="stat-box">
+                <div class="stat-label">عدد الفواتير</div>
+                <div id="myCountStat" class="stat-val">0</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">مستحقاتي (ر.ع)</div>
+                <div id="myEarnStat" class="stat-val gold">0.00</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">بالانتظار</div>
+                <div id="waitCountStat" class="stat-val">0</div>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>رقم الفاتورة</th>
+                    <th>الزبون</th>
+                    <th>الحصة (ر.ع)</th>
+                  </tr>
+                </thead>
+                <tbody id="myInvoicesBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">قائمة الانتظار الحالية (أرقام الفواتير فقط)</div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>رقم الفاتورة</th>
+                  <th>الزبون</th>
+                  <th>الوقت</th>
+                  <th>الحالة</th>
+                </tr>
+              </thead>
+              <tbody id="queueTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="viewAccounting" class="hidden">
+        <div class="card">
+          <div class="card-title">
+            <span>ملخص الحسابات والتصفية</span>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="copySettlementReport()">📋 نسخ كشف التصفية</button>
+              <button type="button" class="btn btn-danger btn-sm" onclick="resetDayInvoices()">🔄 بدء يوم / جولة جديدة</button>
+            </div>
+          </div>
+
+          <div class="grid-3" style="margin-bottom:16px;">
+            <div class="stat-box">
+              <div class="stat-label">إجمالي الفواتير</div>
+              <div id="accTotalInvoices" class="stat-val">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">إجمالي الإيرادات (ر.ع)</div>
+              <div id="accTotalRevenue" class="stat-val">0.00</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">صافي حصة المحل (ر.ع)</div>
+              <div id="accShopShare" class="stat-val gold">0.00</div>
+            </div>
+          </div>
+
+          <h4 style="margin-bottom:10px; color:var(--primary);">مستحقات المنفّذين</h4>
+          <div class="table-wrap" style="margin-bottom:18px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>الاسم</th>
+                  <th>الرمز</th>
+                  <th>عدد الفواتير</th>
+                  <th>أرقام الفواتير</th>
+                  <th>الإجمالي المستحق (ر.ع)</th>
+                </tr>
+              </thead>
+              <tbody id="workersSettlementBody"></tbody>
+            </table>
+          </div>
+
+          <h4 style="margin-bottom:10px; color:var(--primary);">سجل جميع الفواتير</h4>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>رقم الفاتورة</th>
+                  <th>الزبون</th>
+                  <th>الهاتف</th>
+                  <th>السعر</th>
+                  <th>حصة المنفّذ</th>
+                  <th>الحالة</th>
+                  <th>المنفّذ</th>
+                </tr>
+              </thead>
+              <tbody id="allInvoicesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="viewSettings" class="hidden">
+        <div class="card">
+          <div class="card-title">
+            <span>هوية المحل والمسميات والأسعار</span>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="applyPreset('turban')">👑 قالب تمصير</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="applyPreset('barber')">✂️ قالب حلاقة</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="applyPreset('wash')">🚗 قالب مغسلة</button>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label>اسم المحل</label>
+              <input type="text" id="cfgShopName" />
+            </div>
+            <div class="form-group">
+              <label>الوصف الفرعي</label>
+              <input type="text" id="cfgTagline" />
+            </div>
+          </div>
+
+          <div class="grid-3">
+            <div class="form-group">
+              <label>مسمى المنفّذ (مثال: المُمصّر / الحلاق / الفني)</label>
+              <input type="text" id="cfgWorkerTitle" />
+            </div>
+            <div class="form-group">
+              <label>مسمى الخدمة (مثال: تمصيرة / حلاقة / غسلة)</label>
+              <input type="text" id="cfgServiceTitle" />
+            </div>
+            <div class="form-group">
+              <label>رمز / أيقونة الهوية</label>
+              <input type="text" id="cfgIcon" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>رفع شعار المحل (صورة اختيارية)</label>
+            <input type="file" accept="image/*" onchange="handleLogoUpload(event)" />
+          </div>
+
+          <div class="form-group">
+            <label>لون الصفحة</label>
+            <div class="color-swatches">
+              <button type="button" class="swatch" style="background:#d4a638;" onclick="setThemeColor('#d4a638')"></button>
+              <button type="button" class="swatch" style="background:#10b981;" onclick="setThemeColor('#10b981')"></button>
+              <button type="button" class="swatch" style="background:#3b82f6;" onclick="setThemeColor('#3b82f6')"></button>
+              <button type="button" class="swatch" style="background:#e11d48;" onclick="setThemeColor('#e11d48')"></button>
+              <button type="button" class="swatch" style="background:#f97316;" onclick="setThemeColor('#f97316')"></button>
+              <input type="color" id="cfgColorPicker" style="width:52px; height:36px; padding:2px;" />
+            </div>
+          </div>
+
+          <div class="grid-3">
+            <div class="form-group">
+              <label>سعر الخدمة الافتراضي (ر.ع)</label>
+              <input type="number" step="0.1" id="cfgDefaultPrice" />
+            </div>
+            <div class="form-group">
+              <label>حصة المنفّذ الافتراضية (ر.ع)</label>
+              <input type="number" step="0.1" id="cfgDefaultWorkerShare" />
+            </div>
+            <div class="form-group">
+              <label>رمز دخول الكاشير (PIN)</label>
+              <input type="text" id="cfgCashierPin" />
+            </div>
+          </div>
+
+          <hr style="border-color:var(--border); margin:16px 0;" />
+          <h4 style="color:var(--primary); margin-bottom:10px;">إدارة المنفّذين ورموز الدخول السرية</h4>
+
+          <div class="grid-2" style="gap:10px; margin-bottom:12px;">
+            <input type="text" id="newWorkerName" placeholder="اسم المنفّذ الجديد (مثال: سعيد)" />
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="newWorkerPin" placeholder="رمز PIN (مثال: 7777)" />
+              <button type="button" class="btn btn-primary" onclick="addWorker()">إضافة</button>
+            </div>
+          </div>
+
+          <div class="table-wrap" style="margin-bottom:16px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>الاسم</th>
+                  <th>الرمز السري (PIN)</th>
+                  <th>إجراء</th>
+                </tr>
+              </thead>
+              <tbody id="workersConfigBody"></tbody>
+            </table>
+          </div>
+
+          <hr style="border-color:var(--border); margin:16px 0;" />
+          <h4 style="color:var(--primary); margin-bottom:8px;">الربط السحابي (اختياري للمزامنة بين الأجهزة)</h4>
+          <p class="brand-sub" style="margin-bottom:10px;">أدخل رابط Firebase Realtime Database (مثال: https://your-project-default-rtdb.firebaseio.com) إذا أردت مزامنة الفواتير تلقائياً بين أكثر من هاتف.</p>
+          <div class="form-group">
+            <input type="url" id="cfgFirebaseUrl" placeholder="https://....firebaseio.com (اتركه فارغاً للعمل المحلي)" />
+          </div>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary" onclick="saveSettings()">💾 حفظ جميع الإعدادات</button>
+            <button type="button" class="btn btn-secondary" onclick="exportConfigFile()">⬇️ تصدير إعدادات المحل</button>
+            <label class="btn btn-secondary" style="margin:0;">
+              ⬆️ استيراد إعدادات
+              <input type="file" accept=".json" class="hidden" onchange="importConfigFile(event)" />
+            </label>
+          </div>
+          <div id="settingsMsg" class="alert-msg hidden"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'queue_invoice_system_v1';
+
+    const DEFAULT_STATE = {
+      config: {
+        shopName: 'التمصير الملكي',
+        tagline: 'إدارة الدور والفواتير وتصفية حسابات المُمصّرين',
+        workerTitle: 'المُمصّر',
+        serviceTitle: 'تمصيرة',
+        icon: '👑',
+        logoDataUrl: '',
+        themeColor: '#d4a638',
+        defaultPrice: 3,
+        defaultWorkerShare: 2,
+        cashierPin: '1234',
+        firebaseUrl: '',
+        workers: [
+          { id: 'w1', name: 'خالد', pin: '1111' },
+          { id: 'w2', name: 'محمد', pin: '2222' },
+          { id: 'w3', name: 'حمد', pin: '3333' },
+          { id: 'w4', name: 'راشد', pin: '4444' },
+          { id: 'w5', name: 'سالم', pin: '5555' },
+          { id: 'w6', name: 'علي', pin: '6666' }
+        ]
+      },
+      invoices: []
+    };
+
+    let state = loadState();
+    let session = { role: 'cashier', workerId: null };
+    let selectedTicketId = null;
+    let qrScanner = null;
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return structuredClone(DEFAULT_STATE);
+        const parsed = JSON.parse(raw);
+        return {
+          config: { ...DEFAULT_STATE.config, ...(parsed.config || {}) },
+          invoices: Array.isArray(parsed.invoices) ? parsed.invoices : []
+        };
+      } catch (e) {
+        return structuredClone(DEFAULT_STATE);
+      }
+    }
+
+    function persistState(syncCloud = true) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if (syncCloud && state.config.firebaseUrl) {
+        pushToFirebase();
+      }
+    }
+
+    async function pushToFirebase() {
+      const base = state.config.firebaseUrl.trim().replace(/\/+$/, '');
+      if (!base) return;
+      try {
+        await fetch(`${base}/queue_system.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(state)
+        });
+        document.getElementById('syncStatusText').textContent = '(متصل بالسحابة)';
+      } catch (err) {
+        document.getElementById('syncStatusText').textContent = '(تعذر المزامنة)';
+      }
+    }
+
+    async function pullFromFirebase() {
+      const base = state.config.firebaseUrl.trim().replace(/\/+$/, '');
+      if (!base) return;
+      try {
+        const res = await fetch(`${base}/queue_system.json`);
+        if (!res.ok) return;
+        const remote = await res.json();
+        if (remote && remote.config) {
+          state = {
+            config: { ...DEFAULT_STATE.config, ...remote.config },
+            invoices: Array.isArray(remote.invoices) ? remote.invoices : []
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          document.getElementById('syncStatusText').textContent = '(متصل بالسحابة)';
+          applyBranding();
+          refreshAllViews();
+        }
+      } catch (e) {}
+    }
+
+    function applyBranding() {
+      const c = state.config;
+      document.documentElement.style.setProperty('--primary', c.themeColor);
+      document.getElementById('authShopName').textContent = c.shopName;
+      document.getElementById('authShopTagline').textContent = c.tagline;
+      document.getElementById('headerTitle').textContent = c.shopName;
+      document.getElementById('headerTagline').textContent = c.tagline;
+      document.getElementById('workerSelectLabel').textContent = `اختر اسم ${c.workerTitle}`;
+      document.getElementById('roleWorkerBtn').textContent = c.workerTitle;
+      document.getElementById('tabWorker').textContent = `⚡ شاشة ${c.workerTitle}`;
+
+      const renderLogo = (elId) => {
+        const el = document.getElementById(elId);
+        if (c.logoDataUrl) {
+          el.innerHTML = `<img src="${c.logoDataUrl}" alt="شعار" />`;
+        } else {
+          el.textContent = c.icon || '👑';
+        }
+      };
+      renderLogo('authLogo');
+      renderLogo('headerLogo');
+
+      populateWorkerSelects();
+      resetCashierDefaults();
+    }
+
+    function populateWorkerSelects() {
+      const selects = ['loginWorkerSelect', 'activeWorkerSelect', 'callWorkerSelect'];
+      selects.forEach((id) => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        const prev = sel.value;
+        sel.innerHTML = state.config.workers
+          .map((w) => `<option value="${w.id}">${w.name}</option>`)
+          .join('');
+        if (session.role === 'worker' && session.workerId && (id === 'loginWorkerSelect' || id === 'activeWorkerSelect')) {
+          sel.value = session.workerId;
+        } else if (prev && [...sel.options].some((o) => o.value === prev)) {
+          sel.value = prev;
+        }
+      });
+    }
+
+    function resetCashierDefaults() {
+      const nextNum = state.invoices.length
+        ? Math.max(...state.invoices.map((i) => Number(i.number) || 0)) + 1
+        : 1;
+      document.getElementById('invNumberInput').value = nextNum;
+      document.getElementById('invPriceInput').value = state.config.defaultPrice;
+      document.getElementById('invWorkerShareInput').value = state.config.defaultWorkerShare;
+    }
+
+    function setLoginRole(role) {
+      session.role = role;
+      document.getElementById('roleCashierBtn').className = role === 'cashier' ? 'btn btn-primary' : 'btn btn-secondary';
+      document.getElementById('roleWorkerBtn').className = role === 'worker' ? 'btn btn-primary' : 'btn btn-secondary';
+      document.getElementById('workerSelectGroup').classList.toggle('hidden', role !== 'worker');
+      document.getElementById('authError').classList.add('hidden');
+    }
+
+    function handleLogin() {
+      const pin = document.getElementById('loginPinInput').value.trim();
+      const errEl = document.getElementById('authError');
+      errEl.classList.add('hidden');
+
+      if (session.role === 'cashier') {
+        if (pin !== String(state.config.cashierPin)) {
+          errEl.textContent = 'رمز دخول الكاشير غير صحيح.';
+          errEl.classList.remove('hidden');
+          return;
+        }
+        session.workerId = null;
+        document.getElementById('currentUserLabel').textContent = 'الكاشير / الإدارة';
+        showApp('cashier');
+      } else {
+        const wId = document.getElementById('loginWorkerSelect').value;
+        const worker = state.config.workers.find((w) => w.id === wId);
+        if (!worker || pin !== String(worker.pin)) {
+          errEl.textContent = 'الرمز السري للمنفّذ غير صحيح.';
+          errEl.classList.remove('hidden');
+          return;
+        }
+        session.workerId = worker.id;
+        document.getElementById('currentUserLabel').textContent = `${state.config.workerTitle}: ${worker.name}`;
+        showApp('worker');
+      }
+      document.getElementById('loginPinInput').value = '';
+    }
+
+    function showApp(defaultTab) {
+      document.getElementById('authScreen').classList.add('hidden');
+      document.getElementById('appScreen').classList.remove('hidden');
+
+      const isCashier = session.role === 'cashier';
+      document.getElementById('tabCashier').classList.toggle('hidden', !isCashier);
+      document.getElementById('tabAccounting').classList.toggle('hidden', !isCashier);
+      document.getElementById('tabSettings').classList.toggle('hidden', !isCashier);
+
+      switchTab(defaultTab);
+      refreshAllViews();
+      if (state.config.firebaseUrl) {
+        pullFromFirebase();
+      }
+    }
+
+    function logout() {
+      stopScanner();
+      document.getElementById('appScreen').classList.add('hidden');
+      document.getElementById('authScreen').classList.remove('hidden');
+    }
+
+    function switchTab(tab) {
+      if (tab !== 'worker') stopScanner();
+      ['cashier', 'worker', 'accounting', 'settings'].forEach((t) => {
+        document.getElementById('view' + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle('hidden', t !== tab);
+        const btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+        if (btn) btn.classList.toggle('active', t === tab);
+      });
+      if (tab === 'settings') fillSettingsForm();
+      refreshAllViews();
+    }
+
+    function showMsg(elId, text, ok = true) {
+      const el = document.getElementById(elId);
+      el.textContent = text;
+      el.className = `alert-msg ${ok ? 'alert-ok' : 'alert-err'}`;
+      el.classList.remove('hidden');
+    }
+
+    function createInvoice() {
+      const num = parseInt(document.getElementById('invNumberInput').value, 10);
+      const custName = document.getElementById('custNameInput').value.trim() || 'زبون';
+      const custPhone = document.getElementById('custPhoneInput').value.trim();
+      const price = parseFloat(document.getElementById('invPriceInput').value) || 0;
+      const workerShare = parseFloat(document.getElementById('invWorkerShareInput').value) || 0;
+
+      if (!num || num <= 0) {
+        showMsg('cashierMsg', 'يرجى إدخال رقم فاتورة صحيح.', false);
+        return;
+      }
+      if (state.invoices.some((i) => Number(i.number) === num)) {
+        showMsg('cashierMsg', `رقم الفاتورة (${num}) مستخدم بالفعل.`, false);
+        return;
+      }
+
+      const code = String(Math.floor(1000 + Math.random() * 9000));
+      const inv = {
+        id: 'inv_' + Date.now() + '_' + num,
+        number: num,
+        code,
+        customerName: custName,
+        customerPhone: custPhone,
+        price,
+        workerShare,
+        status: 'waiting',
+        workerId: null,
+        workerName: null,
+        createdAt: new Date().toLocaleTimeString('ar-OM', { hour: '2-digit', minute: '2-digit' })
+      };
+
+      state.invoices.unshift(inv);
+      selectedTicketId = inv.id;
+      persistState();
+
+      document.getElementById('custNameInput').value = '';
+      document.getElementById('custPhoneInput').value = '';
+      resetCashierDefaults();
+      showMsg('cashierMsg', `تم إصدار الفاتورة #${num} وكود التفعيل (${code}).`);
+      renderTicket(inv);
+      refreshAllViews();
+    }
+
+    function renderTicket(inv) {
+      const box = document.getElementById('ticketPreview');
+      if (!inv) {
+        box.innerHTML = '<div style="color:#666; font-size:13px;">لا توجد فاتورة محددة بعد</div>';
+        document.getElementById('ticketActions').classList.add('hidden');
+        return;
+      }
+
+      box.innerHTML = `
+        <div style="font-weight:800; font-size:16px;">${state.config.shopName}</div>
+        <div style="font-size:12px; color:#555; margin-bottom:8px;">${state.config.tagline}</div>
+        <div style="font-size:24px; font-weight:800;">فاتورة #${inv.number}</div>
+        <div style="font-size:14px; margin:4px 0;">الزبون: <strong>${inv.customerName}</strong></div>
+        <div style="font-size:13px;">القيمة: <strong>${inv.price.toFixed(2)} ر.ع</strong> (مدفوع)</div>
+        <div style="margin-top:8px; background:#f3f4f6; padding:6px; border-radius:8px; font-size:13px;">
+          كود التفعيل السري: <strong style="font-size:16px; letter-spacing:2px;">${inv.code}</strong>
+        </div>
+        <div id="qrTarget" class="ticket-qr"></div>
+        <div style="font-size:11px; color:#666;">الوقت: ${inv.createdAt}</div>
+      `;
+
+      new QRCode(document.getElementById('qrTarget'), {
+        text: `INV|${inv.number}|${inv.code}`,
+        width: 120,
+        height: 120
+      });
+
+      document.getElementById('ticketActions').classList.remove('hidden');
+    }
+
+    function openCallModal() {
+      document.getElementById('callBox').classList.toggle('hidden');
+    }
+
+    function sendWhatsApp(mode) {
+      const inv = state.invoices.find((i) => i.id === selectedTicketId);
+      if (!inv) return;
+      const phone = (inv.customerPhone || '').replace(/\D/g, '');
+      const workerSel = document.getElementById('callWorkerSelect');
+      const workerName = workerSel && workerSel.options[workerSel.selectedIndex]
+        ? workerSel.options[workerSel.selectedIndex].text
+        : state.config.workerTitle;
+
+      const text = mode === 'call'
+        ? `مرحباً ${inv.customerName}، وصل دورك في ${state.config.shopName} (فاتورة #${inv.number}). تفضل بالتوجه إلى ${state.config.workerTitle} (${workerName}).`
+        : `مرحباً ${inv.customerName}، تم إصدار فاتورتك في ${state.config.shopName}\nرقم الفاتورة: #${inv.number}\nكود التفعيل: ${inv.code}\nالمبلغ: ${inv.price.toFixed(2)} ر.ع`;
+
+      const url = phone
+        ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}`
+        : `https://wa.me/?text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank');
+    }
+
+    async function startScanner() {
+      if (qrScanner) return;
+      const readerEl = document.getElementById('qrReader');
+      qrScanner = new Html5Qrcode('qrReader');
+      try {
+        await qrScanner.start(
+          { facingMode: 'environment' },
+          { fps: 10, qrbox: { width: 210, height: 210 } },
+          (decodedText) => {
+            const parts = decodedText.split('|');
+            if (parts[0] === 'INV' && parts[1] && parts[2]) {
+              document.getElementById('claimInvNum').value = parts[1];
+              document.getElementById('claimPinCode').value = parts[2];
+              claimInvoiceManual();
+              stopScanner();
+            }
+          },
+          () => {}
+        );
+      } catch (e) {
+        showMsg('workerMsg', 'تعذر تشغيل الكاميرا. تأكد من السماح بالوصول للكاميرا عبر HTTPS.', false);
+        qrScanner = null;
+      }
+    }
+
+    async function stopScanner() {
+      if (!qrScanner) return;
+      try {
+        await qrScanner.stop();
+        await qrScanner.clear();
+      } catch (e) {}
+      qrScanner = null;
+      document.getElementById('qrReader').innerHTML = '';
+    }
+
+    function claimInvoiceManual() {
+      const wId = document.getElementById('activeWorkerSelect').value;
+      const worker = state.config.workers.find((w) => w.id === wId);
+      const num = parseInt(document.getElementById('claimInvNum').value, 10);
+      const code = document.getElementById('claimPinCode').value.trim();
+
+      if (!worker) {
+        showMsg('workerMsg', 'اختر الاسم أولاً.', false);
+        return;
+      }
+      const inv = state.invoices.find((i) => Number(i.number) === num);
+      if (!inv) {
+        showMsg('workerMsg', `الفاتورة رقم (${num}) غير موجودة.`, false);
+        return;
+      }
+      if (String(inv.code) !== code) {
+        showMsg('workerMsg', 'كود التفعيل السري غير مطابق للفاتورة!', false);
+        return;
+      }
+      if (inv.status === 'claimed') {
+        showMsg('workerMsg', `هذه الفاتورة مسجلة مسبقاً باسم (${inv.workerName}) ولا يمكن تكرارها.`, false);
+        return;
+      }
+
+      inv.status = 'claimed';
+      inv.workerId = worker.id;
+      inv.workerName = worker.name;
+      persistState();
+
+      document.getElementById('claimInvNum').value = '';
+      document.getElementById('claimPinCode').value = '';
+      showMsg('workerMsg', `تم تثبيت الفاتورة #${inv.number} باسم (${worker.name}) بنجاح.`);
+      refreshAllViews();
+    }
+
+    function renderWorkerView() {
+      const wId = document.getElementById('activeWorkerSelect').value;
+      const mine = state.invoices.filter((i) => i.status === 'claimed' && i.workerId === wId);
+      const waiting = state.invoices.filter((i) => i.status === 'waiting');
+
+      const totalShare = mine.reduce((acc, item) => acc + (Number(item.workerShare) || 0), 0);
+      document.getElementById('myCountStat').textContent = mine.length;
+      document.getElementById('myEarnStat').textContent = totalShare.toFixed(2);
+      document.getElementById('waitCountStat').textContent = waiting.length;
+
+      document.getElementById('myInvoicesBody').innerHTML = mine.length
+        ? mine.map((i) => `<tr><td>#${i.number}</td><td>${i.customerName}</td><td>${Number(i.workerShare).toFixed(2)}</td></tr>`).join('')
+        : `<tr><td colspan="3" style="text-align:center; color:var(--muted);">لا توجد فواتير مثبتة بعد</td></tr>`;
+
+      const ordered = [...state.invoices].sort((a, b) => a.number - b.number);
+      document.getElementById('queueTableBody').innerHTML = ordered.length
+        ? ordered.map((i) => `
+            <tr>
+              <td><strong>#${i.number}</strong></td>
+              <td>${i.customerName}</td>
+              <td>${i.createdAt}</td>
+              <td><span class="badge ${i.status === 'claimed' ? 'badge-done' : 'badge-wait'}">${i.status === 'claimed' ? 'تم التنفيذ' : 'بالانتظار'}</span></td>
+            </tr>
+          `).join('')
+        : `<tr><td colspan="4" style="text-align:center; color:var(--muted);">لا توجد فواتير في القائمة</td></tr>`;
+    }
+
+    function renderAccountingView() {
+      const totalInvoices = state.invoices.length;
+      const totalRevenue = state.invoices.reduce((s, i) => s + (Number(i.price) || 0), 0);
+      const totalWorkersShare = state.invoices
+        .filter((i) => i.status === 'claimed')
+        .reduce((s, i) => s + (Number(i.workerShare) || 0), 0);
+      const shopNet = totalRevenue - totalWorkersShare;
+
+      document.getElementById('accTotalInvoices').textContent = totalInvoices;
+      document.getElementById('accTotalRevenue').textContent = totalRevenue.toFixed(2);
+      document.getElementById('accShopShare').textContent = shopNet.toFixed(2);
+
+      document.getElementById('workersSettlementBody').innerHTML = state.config.workers.map((w) => {
+        const wInvs = state.invoices.filter((i) => i.status === 'claimed' && i.workerId === w.id);
+        const sum = wInvs.reduce((acc, x) => acc + (Number(x.workerShare) || 0), 0);
+        const nums = wInvs.map((x) => `#${x.number}`).join('، ') || '—';
+        return `
+          <tr>
+            <td><strong>${w.name}</strong></td>
+            <td>${w.pin}</td>
+            <td>${wInvs.length}</td>
+            <td>${nums}</td>
+            <td><strong style="color:var(--primary);">${sum.toFixed(2)} ر.ع</strong></td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('allInvoicesBody').innerHTML = state.invoices.length
+        ? state.invoices.map((i) => `
+            <tr>
+              <td>#${i.number}</td>
+              <td>${i.customerName}</td>
+              <td>${i.customerPhone || '—'}</td>
+              <td>${Number(i.price).toFixed(2)}</td>
+              <td>${Number(i.workerShare).toFixed(2)}</td>
+              <td><span class="badge ${i.status === 'claimed' ? 'badge-done' : 'badge-wait'}">${i.status === 'claimed' ? 'مثبتة' : 'بالانتظار'}</span></td>
+              <td>${i.workerName || '—'}</td>
+            </tr>
+          `).join('')
+        : `<tr><td colspan="7" style="text-align:center; color:var(--muted);">لا توجد فواتير مسجلة</td></tr>`;
+    }
+
+    function copySettlementReport() {
+      const lines = [`تصفية حسابات ${state.config.shopName}`];
+      state.config.workers.forEach((w) => {
+        const wInvs = state.invoices.filter((i) => i.status === 'claimed' && i.workerId === w.id);
+        const sum = wInvs.reduce((acc, x) => acc + (Number(x.workerShare) || 0), 0);
+        lines.push(`- ${w.name}: ${wInvs.length} (${wInvs.map((x) => '#' + x.number).join(', ') || 'لا يوجد'}) = ${sum.toFixed(2)} ر.ع`);
+      });
+      navigator.clipboard?.writeText(lines.join('\n'));
+      alert('تم نسخ كشف التصفية إلى الحافظة.');
+    }
+
+    function resetDayInvoices() {
+      if (!confirm('هل أنت متأكد من تصفير فواتير اليوم وبدء يوم جديد؟')) return;
+      state.invoices = [];
+      selectedTicketId = null;
+      persistState();
+      renderTicket(null);
+      resetCashierDefaults();
+      refreshAllViews();
+    }
+
+    function fillSettingsForm() {
+      const c = state.config;
+      document.getElementById('cfgShopName').value = c.shopName;
+      document.getElementById('cfgTagline').value = c.tagline;
+      document.getElementById('cfgWorkerTitle').value = c.workerTitle;
+      document.getElementById('cfgServiceTitle').value = c.serviceTitle;
+      document.getElementById('cfgIcon').value = c.icon || '👑';
+      document.getElementById('cfgColorPicker').value = c.themeColor;
+      document.getElementById('cfgDefaultPrice').value = c.defaultPrice;
+      document.getElementById('cfgDefaultWorkerShare').value = c.defaultWorkerShare;
+      document.getElementById('cfgCashierPin').value = c.cashierPin;
+      document.getElementById('cfgFirebaseUrl').value = c.firebaseUrl || '';
+      renderWorkersConfigTable();
+    }
+
+    function renderWorkersConfigTable() {
+      document.getElementById('workersConfigBody').innerHTML = state.config.workers.map((w) => `
+        <tr>
+          <td><input type="text" value="${w.name}" onchange="updateWorkerField('${w.id}', 'name', this.value)" /></td>
+          <td><input type="text" value="${w.pin}" onchange="updateWorkerField('${w.id}', 'pin', this.value)" /></td>
+          <td><button type="button" class="btn btn-danger btn-sm" onclick="removeWorker('${w.id}')">حذف</button></td>
+        </tr>
+      `).join('');
+    }
+
+    function addWorker() {
+      const name = document.getElementById('newWorkerName').value.trim();
+      const pin = document.getElementById('newWorkerPin').value.trim();
+      if (!name || !pin) return;
+      state.config.workers.push({ id: 'w_' + Date.now(), name, pin });
+      document.getElementById('newWorkerName').value = '';
+      document.getElementById('newWorkerPin').value = '';
+      persistState(false);
+      renderWorkersConfigTable();
+      populateWorkerSelects();
+    }
+
+    function updateWorkerField(id, field, val) {
+      const w = state.config.workers.find((x) => x.id === id);
+      if (w) {
+        w[field] = val.trim();
+        persistState(false);
+        populateWorkerSelects();
+      }
+    }
+
+    function removeWorker(id) {
+      state.config.workers = state.config.workers.filter((x) => x.id !== id);
+      persistState(false);
+      renderWorkersConfigTable();
+      populateWorkerSelects();
+    }
+
+    function setThemeColor(hex) {
+      document.getElementById('cfgColorPicker').value = hex;
+      state.config.themeColor = hex;
+      applyBranding();
+    }
+
+    function handleLogoUpload(e) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        state.config.logoDataUrl = reader.result;
+        applyBranding();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function applyPreset(type) {
+      if (type === 'turban') {
+        state.config.shopName = 'التمصير الملكي';
+        state.config.workerTitle = 'المُمصّر';
+        state.config.serviceTitle = 'تمصيرة';
+        state.config.icon = '👑';
+        state.config.themeColor = '#d4a638';
+        state.config.defaultPrice = 3;
+        state.config.defaultWorkerShare = 2;
+      } else if (type === 'barber') {
+        state.config.shopName = 'صالون النخبة للحلاقة';
+        state.config.workerTitle = 'الحلاق';
+        state.config.serviceTitle = 'حلاقة';
+        state.config.icon = '✂️';
+        state.config.themeColor = '#3b82f6';
+        state.config.defaultPrice = 4;
+        state.config.defaultWorkerShare = 2;
+      } else if (type === 'wash') {
+        state.config.shopName = 'مغسلة السريع للسيارات';
+        state.config.workerTitle = 'العامل';
+        state.config.serviceTitle = 'غسلة';
+        state.config.icon = '🚗';
+        state.config.themeColor = '#10b981';
+        state.config.defaultPrice = 5;
+        state.config.defaultWorkerShare = 2.5;
+      }
+      persistState(false);
+      fillSettingsForm();
+      applyBranding();
+      showMsg('settingsMsg', 'تم تطبيق القالب بنجاح.');
+    }
+
+    function saveSettings() {
+      state.config.shopName = document.getElementById('cfgShopName').value.trim() || 'المحل';
+      state.config.tagline = document.getElementById('cfgTagline').value.trim();
+      state.config.workerTitle = document.getElementById('cfgWorkerTitle').value.trim() || 'العامل';
+      state.config.serviceTitle = document.getElementById('cfgServiceTitle').value.trim() || 'خدمة';
+      state.config.icon = document.getElementById('cfgIcon').value.trim() || '👑';
+      state.config.themeColor = document.getElementById('cfgColorPicker').value || '#d4a638';
+      state.config.defaultPrice = parseFloat(document.getElementById('cfgDefaultPrice').value) || 0;
+      state.config.defaultWorkerShare = parseFloat(document.getElementById('cfgDefaultWorkerShare').value) || 0;
+      state.config.cashierPin = document.getElementById('cfgCashierPin').value.trim() || '1234';
+      state.config.firebaseUrl = document.getElementById('cfgFirebaseUrl').value.trim();
+
+      persistState();
+      applyBranding();
+      refreshAllViews();
+      showMsg('settingsMsg', 'تم حفظ جميع إعدادات المحل بنجاح.');
+    }
+
+    function exportConfigFile() {
+      const blob = new Blob([JSON.stringify(state.config, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'shop-config.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importConfigFile(e) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const imported = JSON.parse(reader.result);
+          state.config = { ...state.config, ...imported };
+          persistState();
+          fillSettingsForm();
+          applyBranding();
+          refreshAllViews();
+          showMsg('settingsMsg', 'تم استيراد ملف الإعدادات بنجاح.');
+        } catch (err) {
+          showMsg('settingsMsg', 'ملف الإعدادات غير صالح.', false);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function refreshAllViews() {
+      renderWorkerView();
+      renderAccountingView();
+    }
+
+    applyBranding();
+  </script>
+</body>
+</html>
