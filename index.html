@@ -995,5 +995,494 @@
 
       if (workerId) {
         const w = state.workers.find((item) => item.id === workerId);
-        
+        if (w) w.calling = false;
+      }
 
+      state.invoices.unshift(newInv);
+      selectedInvoiceId = newInv.id;
+      saveState();
+
+      document.getElementById('customerName').value = '';
+      document.getElementById('customerPhone').value = '';
+      renderCashierAll();
+    });
+
+    function getWorkerName(workerId) {
+      const w = state.workers.find((item) => item.id === workerId);
+      return w ? w.name : 'غير مسند';
+    }
+
+    function renderStatusBadge(status) {
+      if (status === 'waiting') return '<span class="badge badge-waiting">بالانتظار</span>';
+      if (status === 'in_progress') return '<span class="badge badge-progress">قيد التنفيذ</span>';
+      return '<span class="badge badge-done">مكتملة</span>';
+    }
+
+    function renderInvoicesTable() {
+      const tbody = document.getElementById('invoicesTableBody');
+      const totalAmount = state.invoices.reduce((sum, i) => sum + Number(i.amount || 0), 0);
+      document.getElementById('queueSummary').textContent =
+        `الإجمالي: ${state.invoices.length} فاتورة | ${totalAmount.toFixed(2)} ${state.currency}`;
+
+      if (!state.invoices.length) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color: var(--muted);">لا توجد فواتير مسجلة بعد.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = state.invoices
+        .map((inv) => {
+          const workerOptions =
+            '<option value="">اختر مُمصّر</option>' +
+            state.workers
+              .map((w) => `<option value="${w.id}" ${inv.workerId === w.id ? 'selected' : ''}>${w.name}</option>`)
+              .join('');
+
+          return `
+            <tr>
+              <td><strong>${inv.number}</strong></td>
+              <td>${escapeHtml(inv.customerName)}</td>
+              <td>${escapeHtml(inv.serviceName)}</td>
+              <td>${Number(inv.amount).toFixed(2)} ${state.currency}</td>
+              <td><strong>${inv.code}</strong></td>
+              <td>
+                <select onchange="assignWorkerToInvoice('${inv.id}', this.value)" style="min-width: 120px; padding: 6px 8px;">
+                  ${workerOptions}
+                </select>
+              </td>
+              <td>${renderStatusBadge(inv.status)}</td>
+              <td>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="selectInvoice('${inv.id}')">عرض</button>
+                  ${
+                    inv.status !== 'done'
+                      ? `<button type="button" class="btn btn-success btn-sm" onclick="markInvoiceDone('${inv.id}')">إتمام</button>`
+                      : ''
+                  }
+                  <button type="button" class="btn btn-danger btn-sm" onclick="deleteInvoice('${inv.id}')">حذف</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        })
+        .join('');
+    }
+
+    window.assignWorkerToInvoice = function (invoiceId, workerId) {
+      const inv = state.invoices.find((i) => i.id === invoiceId);
+      if (!inv) return;
+      inv.workerId = workerId || null;
+      if (workerId && inv.status === 'waiting') {
+        inv.status = 'in_progress';
+      }
+      if (workerId) {
+        const w = state.workers.find((item) => item.id === workerId);
+        if (w) w.calling = false;
+      }
+      saveState();
+      renderCashierAll();
+    };
+
+    window.selectInvoice = function (invoiceId) {
+      selectedInvoiceId = invoiceId;
+      renderInvoicePreview();
+    };
+
+    window.markInvoiceDone = function (invoiceId) {
+      const inv = state.invoices.find((i) => i.id === invoiceId);
+      if (!inv) return;
+      inv.status = 'done';
+      saveState();
+      renderCashierAll();
+    };
+
+    window.deleteInvoice = function (invoiceId) {
+      state.invoices = state.invoices.filter((i) => i.id !== invoiceId);
+      if (selectedInvoiceId === invoiceId) {
+        selectedInvoiceId = state.invoices[0]?.id || null;
+      }
+      saveState();
+      renderCashierAll();
+    };
+
+    function getCurrentPreviewInvoice() {
+      if (selectedInvoiceId) {
+        const found = state.invoices.find((i) => i.id === selectedInvoiceId);
+        if (found) return found;
+      }
+      return state.invoices[0] || null;
+    }
+
+    function renderInvoicePreview() {
+      const inv = getCurrentPreviewInvoice();
+      const qrBox = document.getElementById('invQrCode');
+      qrBox.innerHTML = '';
+
+      if (!inv) {
+        document.getElementById('invNumber').textContent = '—';
+        document.getElementById('invCustomer').textContent = '—';
+        document.getElementById('invService').textContent = '—';
+        document.getElementById('invAmount').textContent = '—';
+        document.getElementById('invWorker').textContent = '—';
+        document.getElementById('invCode').textContent = '—';
+        document.getElementById('invQrCaption').textContent = '';
+        return;
+      }
+
+      document.getElementById('invNumber').textContent = inv.number;
+      document.getElementById('invCustomer').textContent = inv.customerName;
+      document.getElementById('invService').textContent = inv.serviceName;
+      document.getElementById('invAmount').textContent = `${Number(inv.amount).toFixed(2)} ${state.currency}`;
+      document.getElementById('invWorker').textContent = getWorkerName(inv.workerId);
+      document.getElementById('invCode').textContent = inv.code;
+
+      const qrPayload = `INV|${inv.number}|${inv.code}|${inv.amount}`;
+      document.getElementById('invQrCaption').textContent = `باركود الفاتورة: ${qrPayload}`;
+
+      if (window.QRCode) {
+        new QRCode(qrBox, {
+          text: qrPayload,
+          width: 136,
+          height: 136
+        });
+      }
+    }
+
+    function buildInvoiceWhatsappText(inv) {
+      const fullIdentity = state.activityLabel
+        ? `${state.shopName} - ${state.activityLabel}`
+        : state.shopName;
+      const qrPayload = `INV|${inv.number}|${inv.code}|${Number(inv.amount).toFixed(2)}`;
+      return [
+        `*${fullIdentity}*`,
+        `رقم الفاتورة: *${inv.number}*`,
+        `الزبون: ${inv.customerName}`,
+        `الخدمة: ${inv.serviceName}`,
+        `المبلغ: *${Number(inv.amount).toFixed(2)} ${state.currency}*`,
+        `كود التفعيل: *${inv.code}*`,
+        `الباركود / رمز المسح: \`${qrPayload}\``
+      ].join('\n');
+    }
+
+    document.getElementById('sendWhatsappBtn').addEventListener('click', () => {
+      const inv = getCurrentPreviewInvoice();
+      if (!inv) {
+        alert('لا توجد فاتورة لإرسالها.');
+        return;
+      }
+      const text = encodeURIComponent(buildInvoiceWhatsappText(inv));
+      const cleanPhone = (inv.customerPhone || '').replace(/[^\d]/g, '');
+      const url = cleanPhone
+        ? `https://wa.me/${cleanPhone}?text=${text}`
+        : `https://wa.me/?text=${text}`;
+      window.open(url, '_blank');
+    });
+
+    document.getElementById('printInvoiceBtn').addEventListener('click', () => {
+      window.print();
+    });
+
+    function getSettlementRows() {
+      return state.workers.map((w) => {
+        const workerInvoices = state.invoices.filter((inv) => inv.workerId === w.id);
+        const total = workerInvoices.reduce((sum, inv) => sum + Number(inv.amount || 0), 0);
+        return {
+          workerId: w.id,
+          name: w.name,
+          calling: Boolean(w.calling),
+          count: workerInvoices.length,
+          total
+        };
+      });
+    }
+
+    function renderSettlementTable() {
+      const tbody = document.getElementById('settlementTableBody');
+      const rows = getSettlementRows();
+
+      tbody.innerHTML = rows
+        .map(
+          (r) => `
+          <tr>
+            <td><strong>${escapeHtml(r.name)}</strong></td>
+            <td>${r.calling ? '<span class="badge badge-calling">فاضي / ينادي</span>' : '<span class="muted">عادي</span>'}</td>
+            <td>${r.count} فاتورة</td>
+            <td><strong>${r.total.toFixed(2)} ${state.currency}</strong></td>
+            <td>
+              <button type="button" class="btn btn-success btn-sm" onclick="sendSingleWorkerSettlement('${r.workerId}')">
+                إرسال حسابه واتساب
+              </button>
+            </td>
+          </tr>
+        `
+        )
+        .join('');
+    }
+
+    function buildSettlementSummaryText(filterWorkerId = null) {
+      const fullIdentity = state.activityLabel
+        ? `${state.shopName} - ${state.activityLabel}`
+        : state.shopName;
+      const rows = getSettlementRows().filter((r) => !filterWorkerId || r.workerId === filterWorkerId);
+      const lines = [`*تصفية الحسابات — ${fullIdentity}*`, ''];
+      rows.forEach((r) => {
+        lines.push(`• *${r.name}*: ${r.count} فاتورة | الإجمالي: *${r.total.toFixed(2)} ${state.currency}*`);
+      });
+      return lines.join('\n');
+    }
+
+    window.sendSingleWorkerSettlement = function (workerId) {
+      const text = encodeURIComponent(buildSettlementSummaryText(workerId));
+      window.open(`https://wa.me/?text=${text}`, '_blank');
+    };
+
+    document.getElementById('shareSettlementWhatsappBtn').addEventListener('click', () => {
+      const text = encodeURIComponent(buildSettlementSummaryText());
+      window.open(`https://wa.me/?text=${text}`, '_blank');
+    });
+
+    document.getElementById('exportExcelBtn').addEventListener('click', () => {
+      const rows = getSettlementRows();
+      const csvLines = [
+        ['اسم الممصر', 'عدد الفواتير', `إجمالي المبلغ (${state.currency})`].join(',')
+      ];
+      rows.forEach((r) => {
+        csvLines.push([`"${r.name.replace(/"/g, '""')}"`, r.count, r.total.toFixed(2)].join(','));
+      });
+      const blob = new Blob(['\uFEFF' + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'tasfiyat-al-hisabat.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('printSettlementBtn').addEventListener('click', () => {
+      window.print();
+    });
+
+    function renderSettingsTab() {
+      document.getElementById('shopNameInput').value = state.shopName;
+      document.getElementById('activityLabelInput').value = state.activityLabel;
+      document.getElementById('currencyInput').value = state.currency;
+      document.getElementById('cashierPinInput').value = state.cashierPin;
+
+      const workersBox = document.getElementById('workersListBox');
+      workersBox.innerHTML = state.workers
+        .map(
+          (w) => `
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px; border:1px solid var(--border); border-radius:10px; margin-bottom:8px;">
+            <div>
+              <strong>${escapeHtml(w.name)}</strong>
+              <span class="muted" style="font-size:0.8rem;"> (الرمز مخفي عن الكاشير)</span>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeWorker('${w.id}')">حذف</button>
+          </div>
+        `
+        )
+        .join('');
+
+      const servicesBox = document.getElementById('servicesListBox');
+      servicesBox.innerHTML = state.services
+        .map(
+          (s) => `
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px; border:1px solid var(--border); border-radius:10px; margin-bottom:8px;">
+            <div>
+              <strong>${escapeHtml(s.name)}</strong> — <span>${Number(s.price).toFixed(2)} ${state.currency}</span>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeService('${s.id}')">حذف</button>
+          </div>
+        `
+        )
+        .join('');
+    }
+
+    document.getElementById('saveIdentityBtn').addEventListener('click', () => {
+      const shopName = document.getElementById('shopNameInput').value.trim();
+      const activityLabel = document.getElementById('activityLabelInput').value.trim();
+      const currency = document.getElementById('currencyInput').value.trim() || 'ر.ع';
+      const cashierPin = document.getElementById('cashierPinInput').value.trim();
+
+      if (!shopName) {
+        alert('يرجى كتابة اسم المحل.');
+        return;
+      }
+      if (!cashierPin) {
+        alert('يرجى إدخال رمز الكاشير.');
+        return;
+      }
+
+      state.shopName = shopName;
+      state.activityLabel = activityLabel;
+      state.currency = currency;
+      state.cashierPin = cashierPin;
+      saveState();
+      updateBrandingHeaders();
+      renderCashierAll();
+      alert('تم حفظ هوية المحل والإعدادات.');
+    });
+
+    document.getElementById('addWorkerBtn').addEventListener('click', () => {
+      const nameInput = document.getElementById('newWorkerName');
+      const name = nameInput.value.trim();
+      if (!name) {
+        alert('اكتب اسم المُمصّر أولاً.');
+        return;
+      }
+      const generatedPin = String(Math.floor(3000 + Math.random() * 6999));
+      state.workers.push({
+        id: 'w_' + Date.now(),
+        name,
+        pin: generatedPin,
+        calling: false,
+        calledAt: null
+      });
+      nameInput.value = '';
+      saveState();
+      renderCashierAll();
+    });
+
+    window.removeWorker = function (workerId) {
+      if (state.workers.length <= 1) {
+        alert('يجب وجود مُمصّر واحد على الأقل.');
+        return;
+      }
+      state.workers = state.workers.filter((w) => w.id !== workerId);
+      saveState();
+      renderCashierAll();
+    };
+
+    document.getElementById('addServiceBtn').addEventListener('click', () => {
+      const nameEl = document.getElementById('newServiceName');
+      const priceEl = document.getElementById('newServicePrice');
+      const name = nameEl.value.trim();
+      const price = parseFloat(priceEl.value);
+      if (!name || isNaN(price) || price < 0) {
+        alert('أدخل اسم الخدمة وسعراً صحيحاً.');
+        return;
+      }
+      state.services.push({
+        id: 's_' + Date.now(),
+        name,
+        price
+      });
+      nameEl.value = '';
+      priceEl.value = '';
+      saveState();
+      renderCashierAll();
+    });
+
+    window.removeService = function (serviceId) {
+      if (state.services.length <= 1) {
+        alert('يجب وجود خدمة واحدة على الأقل.');
+        return;
+      }
+      state.services = state.services.filter((s) => s.id !== serviceId);
+      saveState();
+      renderCashierAll();
+    };
+
+    function renderWorkerView() {
+      const worker = state.workers.find((w) => w.id === currentSession.workerId);
+      if (!worker) return;
+
+      document.getElementById('workerTitleName').textContent = `شاشة المُمصّر — ${worker.name}`;
+      document.getElementById('workerSelfPinInput').value = worker.pin || '';
+
+      const callBtn = document.getElementById('callCustomerBtn');
+      const statusText = document.getElementById('workerStatusText');
+      const badge = document.getElementById('workerCallBadge');
+
+      if (worker.calling) {
+        statusText.textContent = `الحالة: فاضي وتنادي للكاشير منذ (${worker.calledAt || 'الآن'})`;
+        badge.className = 'badge badge-calling';
+        badge.textContent = 'النداء مرسل للكاشير';
+        callBtn.className = 'btn btn-warning btn-call';
+        callBtn.textContent = '✓ تم إرسال النداء — اضغط لإلغاء النداء';
+      } else {
+        statusText.textContent = 'الحالة: غير منادٍ حالياً';
+        badge.className = 'badge badge-waiting';
+        badge.textContent = 'بانتظار النداء';
+        callBtn.className = 'btn btn-success btn-call';
+        callBtn.textContent = '📣 أنا فاضي — نادِ زبوناً للكاشير';
+      }
+
+      const myInvoices = state.invoices.filter((inv) => inv.workerId === worker.id);
+      const tbody = document.getElementById('workerInvoicesBody');
+      if (!myInvoices.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color: var(--muted);">لا توجد فواتير مسندة لك حالياً.</td></tr>';
+      } else {
+        tbody.innerHTML = myInvoices
+          .map(
+            (inv) => `
+            <tr>
+              <td><strong>${inv.number}</strong></td>
+              <td>${escapeHtml(inv.customerName)}</td>
+              <td>${escapeHtml(inv.serviceName)}</td>
+              <td>${Number(inv.amount).toFixed(2)} ${state.currency}</td>
+              <td><strong>${inv.code}</strong></td>
+              <td>${renderStatusBadge(inv.status)}</td>
+              <td>
+                ${
+                  inv.status !== 'done'
+                    ? `<button type="button" class="btn btn-success btn-sm" onclick="workerCompleteInvoice('${inv.id}')">تم الإنجاز</button>`
+                    : 'مكتمل'
+                }
+              </td>
+            </tr>
+          `
+          )
+          .join('');
+      }
+    }
+
+    document.getElementById('callCustomerBtn').addEventListener('click', () => {
+      const worker = state.workers.find((w) => w.id === currentSession.workerId);
+      if (!worker) return;
+      worker.calling = !worker.calling;
+      worker.calledAt = worker.calling
+        ? new Date().toLocaleTimeString('ar-OM', { hour: '2-digit', minute: '2-digit' })
+        : null;
+      if (worker.calling) playChime();
+      saveState();
+      renderWorkerView();
+    });
+
+    document.getElementById('saveWorkerPinBtn').addEventListener('click', () => {
+      const worker = state.workers.find((w) => w.id === currentSession.workerId);
+      if (!worker) return;
+      const newPin = document.getElementById('workerSelfPinInput').value.trim();
+      if (!newPin || newPin.length < 3) {
+        alert('اختر رمزاً مكوناً من 3 أرقام أو أحرف على الأقل.');
+        return;
+      }
+      const duplicate = state.workers.some((w) => w.id !== worker.id && String(w.pin) === newPin);
+      if (duplicate || newPin === String(state.cashierPin)) {
+        alert('هذا الرمز مستخدم بالفعل، اختر رمزاً آخر.');
+        return;
+      }
+      worker.pin = newPin;
+      saveState();
+      alert('تم حفظ رمزك السري بنجاح.');
+    });
+
+    window.workerCompleteInvoice = function (invoiceId) {
+      const inv = state.invoices.find((i) => i.id === invoiceId);
+      if (!inv) return;
+      inv.status = 'done';
+      saveState();
+      renderWorkerView();
+    };
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    updateBrandingHeaders();
+  </script>
+</body>
+</html>
